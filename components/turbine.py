@@ -17,6 +17,6 @@ class Turbine:
         W_dot_turb_per_m_dot = W_dot_turb_s_per_m_dot * self.eta
 
         h2 = state_in.h - W_dot_turb_per_m_dot
-        state_out = state_from_PH(P=P2, h=h2)
+        state_out = state_from_PH(P2, h2)
 
         return state_out

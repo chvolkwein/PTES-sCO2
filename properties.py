@@ -1,5 +1,5 @@
 from CoolProp.CoolProp import PropsSI
-from .state import State
+from state import State
 
 FLUID = "CO2"
 
