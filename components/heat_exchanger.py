@@ -5,7 +5,7 @@ from properties import state_from_TP
 #If q_dot_to_wf is positive, then the heat exchanger is adding heat to the working fluid. 
 
 class TemperatureTargetHeatExchanger:
-    def __init__(self, approach_temp=0.0):
+    def __init__(self, approach_temp):
         self.approach_temp = approach_temp
 
     def solve_heating_chg(self, wf_in, wf_out):

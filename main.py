@@ -5,12 +5,12 @@ from components.heat_exchanger import TemperatureTargetHeatExchanger
 from cycles.DischargeCycle import DischargeCycle
 from cycles.ChargeCycle import ChargeCycle
 
-TTD = 0.0
+TTD = 5.0
 
 #Charge
 P_low_chg = 8e6
 P_high_chg = 11e6
-beta_dischg = P_high_chg / P_low_chg
+beta_chg = P_high_chg / P_low_chg
 
 T_comp_in_chg = 750 + 273.15
 T_turb_in_chg = 35 + 273.15
@@ -26,37 +26,38 @@ beta_dischg = P_high_dischg / P_low_dischg
 #Charge:
 T_1_chg = T_comp_in_chg
 T_3_chg = T_turb_in_chg
-state_1 = state_from_TP(T=T_1_chg, P=P_low_dischg)
+state_1 = state_from_TP(T=T_1_chg, P=P_low_chg)
 state_3 = state_from_TP(T=T_3_chg, P=P_high_chg)
 
-compressor = Compressor(eta=0.85, P_out=P_high_chg)
-turbine = Turbine(eta=0.82, P_out=P_low_chg)
+compressor_chg = Compressor(eta=0.85, P_out=P_high_chg)
+turbine_chg = Turbine(eta=0.82, P_out=P_low_chg)
 
-hot_hx = TemperatureTargetHeatExchanger(approach_temp=TTD)
-cold_hx = TemperatureTargetHeatExchanger(approach_temp=TTD)
+hot_hx_chg = TemperatureTargetHeatExchanger(approach_temp=TTD)
+cold_hx_chg = TemperatureTargetHeatExchanger(approach_temp=TTD)
 
-cycle = ChargeCycle(
-    compressor=compressor,
-    turbine=turbine,
-    hot_hx=hot_hx,
-    cold_hx=cold_hx
+cycle_chg = ChargeCycle(
+    compressor=compressor_chg,
+    turbine=turbine_chg,
+    hot_hx=hot_hx_chg,
+    cold_hx=cold_hx_chg
 )
 
-results = cycle.solve(
+results_chg = cycle_chg.solve(
     state_1=state_1,
     state_3=state_3
 )
 
-print(results["specific_quantities"])
+print("Charge specific quantities: ", results_chg["specific_quantities"])
+print("Charge states: ", results_chg["states"])
 
 
 #Discharge
 
-T_low_hotTES = results["TES_temperatures"]["T_low_hotTES_in"]
-T_high_HotTES = results["TES_temperatures"]["T_high_HotTES_out"]
+T_low_hotTES = results_chg["TES_temperatures"]["T_low_hotTES_in"]
+T_high_HotTES = results_chg["TES_temperatures"]["T_high_HotTES_out"]
 
-T_high_ColdTES = results["TES_temperatures"]["T_high_ColdTES_in"]
-T_low_ColdTES = results["TES_temperatures"]["T_low_ColdTES_out"]
+T_high_ColdTES = results_chg["TES_temperatures"]["T_high_ColdTES_in"]
+T_low_ColdTES = results_chg["TES_temperatures"]["T_low_ColdTES_out"]
 
 T_1_dischg = T_low_ColdTES + TTD
 T_3_dischg = T_high_HotTES - TTD
@@ -70,15 +71,31 @@ turbine_dischg = Turbine(eta=0.82, P_out=P_low_dischg)
 # hot_hx = TemperatureTargetHeatExchanger(approach_temp=TTD)
 # cold_hx = TemperatureTargetHeatExchanger(approach_temp=TTD)
 
-cycle = DischargeCycle(
+cycle_dischg = DischargeCycle(
     compressor=compressor_dischg,
     turbine=turbine_dischg,
 )
 
-results = cycle.solve(
+results_dischg = cycle_dischg.solve(
     state_1=state_1_dischg,
     state_3=state_3_dischg
     #m_dot=m_dot
 )
 
-print(results["specific_quantities"])
+print("Discharge specific quantities: ", results_dischg["specific_quantities"])
+print("Discharge states: ", results_dischg["states"])
+
+roundtrip_efficiency = results_dischg["specific_quantities"]["w_net_per_kg"] / results_chg["specific_quantities"]["w_net_per_kg"]
+print(f"Roundtrip efficiency: {roundtrip_efficiency:.2%}")
+
+thermal_efficiency = results_dischg["specific_quantities"]["w_net_per_kg"] / results_chg["specific_quantities"]["q_hot_per_kg"]
+print(f"Thermal efficiency: {thermal_efficiency:.2%}")
+
+COP_charge_heat = results_chg["specific_quantities"]["q_hot_per_kg"] / results_chg["specific_quantities"]["w_net_per_kg"] 
+print(f"COP of charge cycle (heat): {COP_charge_heat:.2f}")
+
+COP_charge_cool = results_chg["specific_quantities"]["q_cold_per_kg"] / results_chg["specific_quantities"]["w_net_per_kg"]
+print(f"COP of charge cycle (cool): {COP_charge_cool:.2f}")
+
+work_ratio = results_chg["specific_quantities"]["w_comp_per_kg"] / results_chg["specific_quantities"]["w_turb_per_kg"]
+print(f"Work ratio: {work_ratio:.2f}")

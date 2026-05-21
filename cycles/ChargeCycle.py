@@ -19,9 +19,9 @@ class ChargeCycle:
 
         state_4 = self.turbine.solve(state_3)
 
-        q_to_wf_per_m_dot_coldHX, T_high_ColdTES_in, T_low_ColdTES_out = self.hot_hx.solve_heating_chg(
-            wf_in=state_2,
-            wf_out=state_3
+        q_to_wf_per_m_dot_coldHX, T_high_ColdTES_in, T_low_ColdTES_out = self.cold_hx.solve_heating_chg(
+            wf_in=state_4,
+            wf_out=state_1
         )
 
         W_comp_per_mdot = state_2.h - state_1.h
@@ -36,7 +36,7 @@ class ChargeCycle:
                 "4": state_4,
             },
             "specific_quantities": {
-                "q_hot_per_kg": q_to_wf_per_m_dot_hotHX,
+                "q_hot_per_kg": -q_to_wf_per_m_dot_hotHX,   # sign convention. I want all values possitive 
                 "q_cold_per_kg": q_to_wf_per_m_dot_coldHX,
                 "w_comp_per_kg": W_comp_per_mdot,
                 "w_turb_per_kg": W_turb_per_mdot,
