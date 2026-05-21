@@ -1,3 +1,11 @@
+from pathlib import Path
+import sys
+
+# Allow imports from project root when running:
+# python examples/run_v0_ideal_cycle.py
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+
 from properties import state_from_TP
 from components.compressor import Compressor
 from components.turbine import Turbine

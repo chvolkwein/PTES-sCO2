@@ -1,58 +1,66 @@
+import numpy as np
 import matplotlib.pyplot as plt
+from properties import state_from_TP
 
 
-def plot_ts_diagram(charge_results, discharge_results, relative_entropy=True, save_path=None):
-    charge_states = charge_results["states"]
-    discharge_states = discharge_results["states"]
+def get_isobaric_path(state_a, state_b, n=50):
+    """
+    Creates a constant-pressure path between state_a and state_b.
+    Uses pressure from state_a.
+    """
+    T_values = np.linspace(state_a.T, state_b.T, n)
+    P = state_a.P
 
-    order = ["1", "2", "3", "4", "1"]
+    states = [state_from_TP(T=T, P=P) for T in T_values]
 
-    s_charge = [charge_states[k].s for k in order]
-    T_charge = [charge_states[k].T for k in order]
+    s_values = [st.s for st in states]
+    T_values = [st.T for st in states]
 
-    s_discharge = [discharge_states[k].s for k in order]
-    T_discharge = [discharge_states[k].T for k in order]
+    return s_values, T_values
 
-    if relative_entropy:
-        s_charge_ref = charge_states["1"].s
-        s_discharge_ref = discharge_states["1"].s
 
-        s_charge = [s - s_charge_ref for s in s_charge]
-        s_discharge = [s - s_discharge_ref for s in s_discharge]
+def plot_ts_diagram(charge_results, discharge_results):
+    plt.figure(figsize=(9, 6))
 
-        xlabel = r"Entropy change, $s - s_1$ [J/kg-K]"
-    else:
-        xlabel = r"Entropy, $s$ [J/kg-K]"
+    for results, label, linestyle in [
+        (charge_results, "Charge", "-"),
+        (discharge_results, "Discharge", "--"),
+    ]:
+        states = results["states"]
 
-    plt.figure(figsize=(8, 6))
+        s1, T1 = states["1"].s, states["1"].T
+        s2, T2 = states["2"].s, states["2"].T
+        s3, T3 = states["3"].s, states["3"].T
+        s4, T4 = states["4"].s, states["4"].T
 
-    plt.plot(s_charge, T_charge, marker="o", linestyle="-", label="Carga")
-    plt.plot(s_discharge, T_discharge, marker="o", linestyle="--", label="Descarga")
+        # Compressor: 1 -> 2
+        plt.plot([s1, s2], [T1, T2], linestyle=linestyle)
 
-    # Etiquetas de estados
-    for k in ["1", "2", "3", "4"]:
-        if relative_entropy:
-            x_c = charge_states[k].s - charge_states["1"].s
-            x_d = discharge_states[k].s - discharge_states["1"].s
-        else:
-            x_c = charge_states[k].s
-            x_d = discharge_states[k].s
+        # High-side HX: 2 -> 3, constant high pressure
+        s_hx_high, T_hx_high = get_isobaric_path(states["2"], states["3"])
+        plt.plot(s_hx_high, T_hx_high, linestyle=linestyle)
 
-        y_c = charge_states[k].T
-        y_d = discharge_states[k].T
+        # Turbine: 3 -> 4
+        plt.plot([s3, s4], [T3, T4], linestyle=linestyle)
 
-        plt.annotate(f"{k}c", (x_c, y_c), textcoords="offset points", xytext=(5, 5))
-        plt.annotate(f"{k}d", (x_d, y_d), textcoords="offset points", xytext=(5, -10))
+        # Low-side HX: 4 -> 1, constant low pressure
+        s_hx_low, T_hx_low = get_isobaric_path(states["4"], states["1"])
+        plt.plot(s_hx_low, T_hx_low, linestyle=linestyle, label=label)
 
-    plt.xlabel(xlabel)
+        # State points
+        for k in ["1", "2", "3", "4"]:
+            plt.scatter(states[k].s, states[k].T)
+            plt.annotate(
+                f"{k}{label[0].lower()}",
+                (states[k].s, states[k].T),
+                textcoords="offset points",
+                xytext=(6, 6),
+            )
+
+    plt.xlabel("Entropy, s [J/kg-K]")
     plt.ylabel("Temperature [K]")
     plt.title("T-s Diagram")
     plt.grid(True)
     plt.legend()
-
-    if save_path is not None:
-        plt.savefig(save_path, dpi=300, bbox_inches="tight")
-    else:
-        plt.show()
-
-    plt.close()
+    plt.tight_layout()
+    plt.show()
