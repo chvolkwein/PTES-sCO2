@@ -29,11 +29,15 @@ beta_dischg = P_high_dischg / P_low_dischg
 #T_comp_in_dischg = 35 + 273.15
 #T_turb_in_dischg = 800 + 273.15
 
+#Storage
+
 m_dot_wf_chg = 1
 duration_chg = 3600 # seconds, i.e., 1 hour of charge/discharge
 m_dot_wf_dischg = 1
 duration_dischg = 3600 # seconds, i.e., 1 hour of charge/discharge
 P_atm = 101325
+Initial_mass_hot_TES = 4000 # kg
+Initial_mass_cold_TES = 4000 # kg
 
 #Charge:
 T_1_chg = T_comp_in_chg
@@ -76,10 +80,10 @@ T_low_ColdTES = results_chg["TES_temperatures"]["T_low_ColdTES_out"]
 TES_fluid = EESStorageFluid(STORAGE_FLUID)
 
 #Individual Tanks
-TES_hot_high = Tank(T_high_HotTES, P_atm)
-TES_hot_low = Tank(T_low_hotTES, P_atm)
-TES_cold_high = Tank(T_high_ColdTES, P_atm)
-TES_cold_low = Tank(T_low_ColdTES, P_atm)
+TES_hot_high = Tank(T_high_HotTES, Initial_mass_hot_TES)
+TES_hot_low = Tank(T_low_hotTES, Initial_mass_hot_TES)
+TES_cold_high = Tank(T_high_ColdTES, Initial_mass_cold_TES)
+TES_cold_low = Tank(T_low_ColdTES, Initial_mass_cold_TES)
 
 #Two Tank System
 #Hot TES System
@@ -91,8 +95,8 @@ Cold_TES_system = TwoTankTES(TES_cold_high,TES_cold_low, TES_fluid)
 q_hot_wf = results_chg["specific_quantities"]["q_hot_per_kg"]
 q_cold_wf = results_chg["specific_quantities"]["q_cold_per_kg"]
 
-Q_hot_tes = -q_hot_wf * m_dot_wf_chg * duration_chg
-Q_cold_tes = -q_cold_wf * m_dot_wf_chg * duration_chg
+Q_hot_tes = abs(q_hot_wf) * m_dot_wf_chg * duration_chg
+Q_cold_tes = -abs(q_cold_wf) * m_dot_wf_chg * duration_chg
 
 moved_hot_mass = Hot_TES_system.exchange_heat(Q_hot_tes)
 moved_cold_mass = Cold_TES_system.exchange_heat(Q_cold_tes)
@@ -152,8 +156,8 @@ plot_ts_diagram(results_chg, results_dischg)
 q_hot_wf_dischg = results_dischg["specific_quantities"]["q_hot_per_kg"]
 q_cold_wf_dischg = results_dischg["specific_quantities"]["q_cold_per_kg"]
 
-Q_hot_tes_dischg = -q_hot_wf_dischg * m_dot_wf_dischg * duration_dischg
-Q_cold_tes_dischg  = -q_cold_wf_dischg * m_dot_wf_dischg * duration_dischg
+Q_hot_tes_dischg = -abs(q_hot_wf_dischg) * m_dot_wf_dischg * duration_dischg
+Q_cold_tes_dischg  = abs(q_cold_wf_dischg) * m_dot_wf_dischg * duration_dischg
 
 moved_hot_mass_dischg = Hot_TES_system.exchange_heat(Q_hot_tes_dischg)
 moved_cold_mass_dischg = Cold_TES_system.exchange_heat(Q_cold_tes_dischg)

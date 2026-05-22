@@ -27,7 +27,7 @@ class DischargeCycle:
             },
             "specific_quantities": {
                 "q_hot_per_kg": Q_hot_per_mdot,
-                "q_cold_per_kg": Q_cold_per_mdot,
+                "q_cold_per_kg": -Q_cold_per_mdot,
                 "w_comp_per_kg": W_comp_per_mdot,
                 "w_turb_per_kg": W_turb_per_mdot,
                 "w_net_per_kg": W_net_per_mdot,
