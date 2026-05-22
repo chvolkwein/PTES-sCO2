@@ -36,7 +36,7 @@ class ChargeCycle:
                 "4": state_4,
             },
             "specific_quantities": {
-                "q_hot_per_kg": -q_to_wf_per_m_dot_hotHX,   # sign convention. I want all values possitive 
+                "q_hot_per_kg": q_to_wf_per_m_dot_hotHX,  
                 "q_cold_per_kg": q_to_wf_per_m_dot_coldHX,
                 "w_comp_per_kg": W_comp_per_mdot,
                 "w_turb_per_kg": W_turb_per_mdot,

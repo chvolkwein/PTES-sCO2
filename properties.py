@@ -27,3 +27,29 @@ def state_from_PH(P: float, H: float) -> State:
     v = 1/rho
 
     return State(T=t, P=P, h=H, s=s, v=v)
+
+
+
+class CoolPropStorageFluid:
+    def __init__(self, fluid_name, P_ref=101325.0):
+        self.fluid_name = fluid_name
+        self.P_ref = P_ref
+
+    def cp(self, T):
+        return PropsSI("C", "T", T, "P", self.P_ref, self.fluid_name)
+
+    def rho(self, T):
+        return PropsSI("D", "T", T, "P", self.P_ref, self.fluid_name)
+
+    def h(self, T):
+        return PropsSI("H", "T", T, "P", self.P_ref, self.fluid_name)
+
+class EESStorageFluid:
+    def __init__(self, fluid_name):
+        self.fluid_name = fluid_name
+
+    def rho(self, T):
+        return 4.79*T-2616.15
+
+    def h(self, T):
+        return 2855.58*T-1455264
