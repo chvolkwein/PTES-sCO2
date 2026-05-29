@@ -8,6 +8,7 @@ from plots import plot_ts_diagram
 from components.storage import Tank
 from components.storage import TwoTankTES
 from properties import EESStorageFluid
+from scipy.optimize import least_squares
 
 
 TTD = 5.0
@@ -16,18 +17,15 @@ STORAGE_FLUID = "Therminol VP-1"
 
 #Charge
 P_low_chg = 8e6
-P_high_chg = P_low_chg*3.06 #11e6
-beta_chg = P_high_chg / P_low_chg
+beta_chg = 3.06
+P_high_chg = P_low_chg*beta_chg #11e6
 
 T_comp_in_chg = 400 + 273.15
 T_turb_in_chg = 30 + 273.15
 
-P_low_dischg = P_low_chg# 8e6
-P_high_dischg = P_low_dischg*3.06 #11e6
-beta_dischg = P_high_dischg / P_low_dischg
-
-#T_comp_in_dischg = 35 + 273.15
-#T_turb_in_dischg = 800 + 273.15
+P_low_dischg = 8607267.748721655# 8e6
+beta_dischg = 26477221.7453106/8607267.748721655
+P_high_dischg = P_low_dischg*beta_dischg #11e6
 
 #Storage
 
@@ -151,7 +149,7 @@ work_ratio = results_chg["specific_quantities"]["w_comp_per_kg"] / results_chg["
 print(f"Work ratio: {work_ratio:.2f}")
 
 
-plot_ts_diagram(results_chg, results_dischg)
+
 
 #Storage in discharge
 
@@ -177,7 +175,48 @@ print("Final state of Hot TES High Tank - discharge: ", T_high_HotTES ) #Same
 print("Final state of Hot TES Low Tank - discharge: ", results_dischg["states"]["2"].T + TTD) 
 print("Final state of Cold TES High Tank - discharge: ", results_dischg["states"]["4"].T - TTD)
 print("Final state of Cold TES Low Tank - discharge: ",T_low_ColdTES ) #Same
- 
 
+plot_ts_diagram(results_chg, results_dischg)
+
+def discharge_pressure_residuals(x):
+    P_low, beta = x
+    P_high = P_low * beta
+
+    T1_target = T_low_ColdTES + TTD
+    T3_target = T_high_HotTES - TTD
+
+    T2_target = T_low_hotTES - TTD
+    T4_target = T_high_ColdTES + TTD
+
+    state_1 = state_from_TP(T=T1_target, P=P_low)
+    state_3 = state_from_TP(T=T3_target, P=P_high)
+
+    compressor = Compressor(eta=0.9, P_out=P_high)
+    turbine = Turbine(eta=0.9, P_out=P_low)
+
+    state_2 = compressor.solve(state_1)
+    state_4 = turbine.solve(state_3)
+
+    return [
+        state_2.T - T2_target,
+        state_4.T - T4_target,
+    ]
  
+guess = [P_low_chg, beta_chg]
+
+solution = least_squares(
+    discharge_pressure_residuals,
+    x0=guess,
+    bounds=(
+        [7.5e6, 1.01],   # P_low min, beta min
+        [30e6, 10.0],    # P_low max, beta max
+    )
+)
+
+P_low_dischg = solution.x[0]
+beta_dischg = solution.x[1]
+P_high_dischg = P_low_dischg * beta_dischg
+
+print(P_low_dischg, P_high_dischg)
+print("residuals:", solution.fun)
  
