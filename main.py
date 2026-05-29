@@ -23,7 +23,7 @@ T_comp_in_chg = 400 + 273.15
 T_turb_in_chg = 30 + 273.15
 
 P_low_dischg = P_low_chg# 8e6
-P_high_dischg = P_low_dischg*3.26 #11e6
+P_high_dischg = P_low_dischg*3.06 #11e6
 beta_dischg = P_high_dischg / P_low_dischg
 
 #T_comp_in_dischg = 35 + 273.15
@@ -67,7 +67,9 @@ print("Charge specific quantities: ", results_chg["specific_quantities"])
 print("Charge states: ", results_chg["states"])
 
 
-#Discharge
+
+
+#Storage
 
 T_low_hotTES = results_chg["TES_temperatures"]["T_low_hotTES_in"]
 T_high_HotTES = results_chg["TES_temperatures"]["T_high_HotTES_out"]
@@ -75,7 +77,7 @@ T_high_HotTES = results_chg["TES_temperatures"]["T_high_HotTES_out"]
 T_high_ColdTES = results_chg["TES_temperatures"]["T_high_ColdTES_in"]
 T_low_ColdTES = results_chg["TES_temperatures"]["T_low_ColdTES_out"]
 
-#Storage
+
 
 TES_fluid = EESStorageFluid(STORAGE_FLUID)
 
@@ -105,7 +107,7 @@ print(f"Mass moved from Low TES to High TES in Hot System: {moved_hot_mass:.2f} 
 print(f"Mass moved from High TES to Low TES in Cold System: {moved_cold_mass:.2f} kg")
 
 
-
+#Discharge
 
 T_1_dischg = T_low_ColdTES + TTD
 T_3_dischg = T_high_HotTES - TTD
@@ -164,3 +166,18 @@ moved_cold_mass_dischg = Cold_TES_system.exchange_heat(Q_cold_tes_dischg)
 
 print(f"Mass moved from Low TES to High TES in Hot System: {moved_hot_mass_dischg:.2f} kg")
 print(f"Mass moved from High TES to Low TES in Cold System: {moved_cold_mass_dischg:.2f} kg")
+
+print("Final state of Hot TES High Tank - Charge: ", T_high_HotTES ) #Same
+print("Final state of Hot TES Low Tank - Charge: ", T_low_hotTES)
+print("Final state of Cold TES High Tank - Charge: ", T_high_ColdTES)
+print("Final state of Cold TES Low Tank - Charge: ",T_low_ColdTES ) #Same
+
+
+print("Final state of Hot TES High Tank - discharge: ", T_high_HotTES ) #Same
+print("Final state of Hot TES Low Tank - discharge: ", results_dischg["states"]["2"].T + TTD) 
+print("Final state of Cold TES High Tank - discharge: ", results_dischg["states"]["4"].T - TTD)
+print("Final state of Cold TES Low Tank - discharge: ",T_low_ColdTES ) #Same
+ 
+
+ 
+ 
