@@ -1,5 +1,6 @@
 from components.heat_exchanger import TemperatureTargetHeatExchanger
 from state import State
+from properties import state_from_TP
 
 
 class ChargeCycle:
@@ -9,7 +10,7 @@ class ChargeCycle:
         self.hot_hx = hot_hx
         self.cold_hx = cold_hx
 
-    def solve(self, state_1, state_3):#, m_dot):
+    def solve(self, state_1, state_3, TTD_reject=0.0):#, m_dot):
         state_2 = self.compressor.solve(state_1)
 
         q_to_wf_per_m_dot_hotHX, T_low_hotTES_in, T_high_HotTES_out = self.hot_hx.solve_cooling_chg(
@@ -17,7 +18,13 @@ class ChargeCycle:
             wf_out=state_3
         )
 
-        state_4 = self.turbine.solve(state_3)
+        #Include heat rejection
+        T_new = state_3.T - TTD_reject
+        P_new = state_3.P
+        state_3_new = state_from_TP(T=T_new, P=P_new)
+
+
+        state_4 = self.turbine.solve(state_3_new)
 
         q_to_wf_per_m_dot_coldHX, T_high_ColdTES_in, T_low_ColdTES_out = self.cold_hx.solve_heating_chg(
             wf_in=state_4,
@@ -25,14 +32,14 @@ class ChargeCycle:
         )
 
         W_comp_per_mdot = state_2.h - state_1.h
-        W_turb_per_mdot = state_3.h - state_4.h
+        W_turb_per_mdot = state_3_new.h - state_4.h
         W_net_per_mdot = W_comp_per_mdot - W_turb_per_mdot
 
         return {
             "states": {
                 "1": state_1,
                 "2": state_2,
-                "3": state_3,
+                "3": state_3_new,
                 "4": state_4,
             },
             "specific_quantities": {
