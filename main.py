@@ -30,7 +30,7 @@ eta_turb = 0.9
 
 # Charge boundary temperatures of working fluid
 T_comp_in_chg = C_to_K(400.0)
-T_turb_in_chg = C_to_K(30.0)
+T_turb_in_chg = C_to_K(45.0)
 
 # Nominal values used as initial guess
 P_low_chg_nom = 8e6
@@ -39,7 +39,7 @@ beta_chg_nom = 3.06
 P_low_dischg_nom = 8e6
 beta_dischg_nom = 3.26
 
-TTD_nom = 5.0
+TTD_nom = 10.0
 
 
 # ============================================================
@@ -294,12 +294,12 @@ lower_bounds = np.array([
     2.05,    # beta_chg min
     8.0e6,   # P_low_dischg min
     2.05,    # beta_dischg min
-    5.0,     # TTD_hot_chg min
-    5.0,     # TTD_cold_chg min
-    5.0,     # TTD_hot_dischg min
-    5.0,     # TTD_cold_dischg min
-    2.0,     # TTD_reject_chg min
-    2.0,     # TTD_reject_dischg min
+    8.0,     # TTD_hot_chg min
+    8.0,     # TTD_cold_chg min
+    8.0,     # TTD_hot_dischg min
+    8.0,     # TTD_cold_dischg min
+    0.0,     # TTD_reject_chg min
+    0.0,     # TTD_reject_dischg min
 ], dtype=float)
 
 upper_bounds = np.array([
@@ -465,3 +465,20 @@ print(f"COP of charge cycle (cool): {COP_charge_cool:.2f}")
 
 work_ratio = results_chg["specific_quantities"]["w_comp_per_kg"] / results_chg["specific_quantities"]["w_turb_per_kg"]
 print(f"Work ratio: {work_ratio:.2f}")
+
+q_hot_chg = results_chg["specific_quantities"]["q_hot_per_kg"]
+q_cold_chg = results_chg["specific_quantities"]["q_cold_per_kg"]
+w_net_chg = results_chg["specific_quantities"]["w_net_per_kg"]
+
+charge_energy_error = abs(q_hot_chg) - abs(q_cold_chg) - w_net_chg
+
+print(f"Charge energy closure error = {charge_energy_error:.6e} J/kg")
+
+q_hot_dischg = results_dischg["specific_quantities"]["q_hot_per_kg"]
+q_cold_dischg = results_dischg["specific_quantities"]["q_cold_per_kg"]
+w_net_dischg = results_dischg["specific_quantities"]["w_net_per_kg"]
+
+discharge_energy_error = abs(q_hot_dischg) - abs(q_cold_dischg) - w_net_dischg
+
+print(f"Discharge energy closure error = {discharge_energy_error:.6e} J/kg")
+
